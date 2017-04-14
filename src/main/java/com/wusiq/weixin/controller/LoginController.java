@@ -2,13 +2,18 @@ package com.wusiq.weixin.controller;
 
 import com.wusiq.weixin.dto.req.ReqLoginDto;
 import com.wusiq.weixin.dto.rsp.RspLoginDto;
+import com.wusiq.weixin.utils.WeixinUtils;
 import net.sf.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by wicker on 2017/3/31.
@@ -17,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 @RequestMapping("login")
 public class LoginController {
+    private static Logger log = LoggerFactory.getLogger(LoginController.class);
 
     @ResponseBody
     @RequestMapping(value="doLogin.do",method = RequestMethod.POST)
@@ -26,10 +32,15 @@ public class LoginController {
         rsp.setResult("1");
         rsp.setUsername(req.getUsername());
 
+
+        String token = WeixinUtils.getAccess_token();
+
+
         //转成json字符串
         JSONObject object = JSONObject.fromObject(rsp);
         String res = object.toString();
         System.out.println(res);
         return res;
     }
+
 }
