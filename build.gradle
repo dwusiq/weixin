@@ -17,7 +17,8 @@ repositories {
 List servlet = ['javax.servlet:servlet-api:2.5']
 
 List apache_commons = [
-        "commons-codec:commons-codec:1.9"
+        "commons-codec:commons-codec:1.9",
+        "commons-io:commons-io:2.5"
 ]
 
 List junit = ["junit:junit:4.11"]
@@ -43,7 +44,21 @@ List jackson = [
         'net.sf.json-lib:json-lib:2.4:jdk15'
 ]
 
+List logger = [
+        'org.apache.logging.log4j:log4j-api:2.1',
+        'org.apache.logging.log4j:log4j-core:2.1',
+        'org.apache.logging.log4j:log4j-slf4j-impl:2.1',
+        'org.apache.logging.log4j:log4j-web:2.1',
+        'org.slf4j:jcl-over-slf4j:1.7.12'
+]
+
+List redis = ['redis.clients:jedis:2.9.0']
+List fastjson = ['com.alibaba:fastjson:1.2.29']
+List xstream = ['com.thoughtworks.xstream:xstream:1.4.9']
+List dom4j = ['dom4j:dom4j:1.6.1']
+
+
 dependencies {
-    compile apache_commons,junit,spring,jackson,servlet
-    runtime apache_commons,spring,jackson,servlet
+    compile apache_commons,junit,spring,jackson,servlet,logger,fastjson,redis,xstream,dom4j
+    runtime apache_commons,spring,jackson,servlet,logger,fastjson,redis,xstream,dom4j
 }
