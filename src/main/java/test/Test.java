@@ -10,27 +10,8 @@ import java.io.*;
  */
 public class Test {
     public static void main(String args[]){
-        String originalFile = "H:"+ File.separator+"test"+File.separator+"window.mp4";
-        String afterFile = "H:"+ File.separator+"test"+File.separator+"down"+File.separator+"window.mp4";
-        File file1 = new File(originalFile);
-        File file2 = new File(afterFile);
-        InputStream is = null;
-        try {
-            is = new FileInputStream(file1);
-            OutputStream os = new FileOutputStream(file2);
-            int len = -1;
-            byte[] b = new byte[1024];
-            while ((len=is.read(b))!=-1){
-                os.write(b,0,len);
-            }
-            is.close();
-            os.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
-
-
+       String ContentDisposition="attachment; filename=1007_d008f0e21c304c1a9042d440d02bdcf3.f10.mp4";
+       String FileName = ContentDisposition.substring(ContentDisposition.indexOf("filename=")+"filename=".length(), ContentDisposition.length());
+       System.out.println(FileName);
     }
 }

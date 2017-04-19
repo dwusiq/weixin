@@ -1,6 +1,7 @@
 package com.wusiq.weixin.service;
 
 import com.wusiq.weixin.dto.req.Menu;
+import net.sf.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,4 +17,11 @@ public interface WeiXinService {
     boolean createMenu(Menu menu);
     /**处理微信的消息请求*/
     String processRequest(HttpServletRequest request);
+    /**新增临时素材*/
+    JSONObject uploadMedia(String filePath, String mediaType);
+    /**获取临时素材*/
+    String downloadMedia(String mediaId,String fileSavePath);
+    /**获取视频素材*/
+    String downloadVideo(String mediaId,String fileSavePath);
+
 }

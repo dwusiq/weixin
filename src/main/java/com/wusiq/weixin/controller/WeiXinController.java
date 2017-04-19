@@ -1,10 +1,10 @@
 package com.wusiq.weixin.controller;
 
 import com.wusiq.weixin.dto.req.*;
+import com.wusiq.weixin.dto.rsp.RspDto;
 import com.wusiq.weixin.dto.rsp.RspLoginDto;
 import com.wusiq.weixin.service.WeiXinService;
 import com.wusiq.weixin.utils.StringTools;
-import com.wusiq.weixin.utils.WeixinUtils;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -73,14 +74,12 @@ public class WeiXinController {
     @RequestMapping(value="test.do",method = RequestMethod.GET)
     public String login(){
       //  String rspStr = "伍思强 爱 伍柳君";
-        String rspStr = WeixinUtils.getAccess_token();
+        String rspStr = "aaaa";
 
         Menu menu = getMenu();
 
-        boolean createFlag = WeiXinServiceImpl.createMenu(menu);
-        if(createFlag){
-            rspStr = "success";
-        }
+        rspStr = WeiXinServiceImpl.getServiceIp();
+
 
 
         RspLoginDto rsp = new RspLoginDto();
@@ -92,6 +91,76 @@ public class WeiXinController {
         return rspStr;
     }
 
+    /***
+     * 上传临时素材
+     */
+    @ResponseBody
+    @RequestMapping(value="uploadMedia.do",method = RequestMethod.GET)
+    public String uploadMedia(){
+        String rspStr = "aaaa";
+        //String filePath = "H:"+ File.separator+"test"+File.separator+"scream.JPG";
+        //String filePath = "H:"+ File.separator+"test"+File.separator+"cup.mp4";
+        String filePath = "H:"+ File.separator+"test"+File.separator+"scream01.JPG";
+
+        JSONObject jobj = WeiXinServiceImpl.uploadMedia(filePath,"image");
+        rspStr = jobj.getString("media_id");
+        log.info("rspStr:{}",rspStr);
+
+        RspLoginDto rsp = new RspLoginDto();
+        rsp.setResult(rspStr);
+        //转成json字符串
+        JSONObject object = JSONObject.fromObject(rsp);
+        String res = object.toString();
+        log.info("rsp:{}",res);
+        return rspStr;
+    }
+
+
+    /***
+     * 获取临时素材
+     */
+    @ResponseBody
+    @RequestMapping(value="downloadFile.do",method = RequestMethod.GET)
+    public String downloadFile(){
+        String rspStr = "aaaa";
+        String filePath = "H:"+ File.separator+"test"+File.separator+"Files";
+      // String mediaId = "4aTHSQywlN2NfmhCDkq93R4HJaBOoTQObis3H308PdqFbdQ2raXt78r7uOCWK-LU";
+        //String mediaId = "kyMUfUSVWeeqiAVFBS6tqN6Bft7P4io4V2cFW0RReO6imrrmoZS9IBWfjy1X0NWP";//scream01.JPG
+        String mediaId = "BZbBW-v_-uPObjr0kah2AnNiEQ6a-oKy_cGdrOkKZdTjcS__nqfQsSQ03j8SSIdR";//cup.mp4
+
+        rspStr = WeiXinServiceImpl.downloadMedia(mediaId,filePath);
+        log.info("rspStr:{}",rspStr);
+
+        RspDto rsp = new RspDto();
+        rsp.setResult(rspStr);
+        //转成json字符串
+        JSONObject object = JSONObject.fromObject(rsp);
+        String res = object.toString();
+        log.info("rsp:{}",res);
+        return rspStr;
+    }
+
+
+    /***
+     * 获取微信视频素材
+     */
+    @ResponseBody
+    @RequestMapping(value="downloadVideo.do",method = RequestMethod.GET)
+    public String downloadVideo(){
+        String rspStr = "aaaa";
+        String filePath = "H:"+ File.separator+"test"+File.separator+"Files";
+        String mediaId = "BZbBW-v_-uPObjr0kah2AnNiEQ6a-oKy_cGdrOkKZdTjcS__nqfQsSQ03j8SSIdR";//cup.mp4
+        rspStr = WeiXinServiceImpl.downloadVideo(mediaId,filePath);
+        log.info("rspStr:{}",rspStr);
+
+        RspDto rsp = new RspDto();
+        rsp.setResult(rspStr);
+        //转成json字符串
+        JSONObject object = JSONObject.fromObject(rsp);
+        String res = object.toString();
+        log.info("rsp:{}",res);
+        return rspStr;
+    }
 
 
 

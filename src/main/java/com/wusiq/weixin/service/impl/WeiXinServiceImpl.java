@@ -5,8 +5,8 @@ import com.wusiq.weixin.dto.req.Menu;
 import com.wusiq.weixin.service.EventService;
 import com.wusiq.weixin.service.MessageService;
 import com.wusiq.weixin.service.WeiXinService;
+import com.wusiq.weixin.utils.HttpUtils;
 import com.wusiq.weixin.utils.MessageUtils;
-import com.wusiq.weixin.utils.MyX509TrustManager;
 import com.wusiq.weixin.utils.RedisUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -16,16 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,12 +25,13 @@ import java.util.Map;
 @Service
 public class WeiXinServiceImpl implements WeiXinService {
     private static Logger log = LoggerFactory.getLogger(WeiXinServiceImpl.class);
+    private static final String REQUEST_METHOD_GET = "GET";
+    private static final String REQUEST_METHOD_POST = "POST";
     @Autowired
     MessageService MessageServiceImpl;
     @Autowired
     EventService EventServiceImpl;
-    private static final String ENCODING="UTF-8";//编码格式
-    private static final String TIME_OUT = "30000";//超时时间为30秒
+
     private static final String ACCESS_TOKEN = "accessToken";//redis中保存的access_token的键
 
 
@@ -61,9 +53,9 @@ public class WeiXinServiceImpl implements WeiXinService {
         String url = Constant.WEIXIN_GETACCESS_TOKEN_URL;
         String reqUrl = String.format(url, Constant.WEIXIN_APPID,Constant.WEIXIN_SECRET);
 
-        JSONObject json = sendGet(reqUrl);
+        JSONObject jsonObject = HttpUtils.httpsRequest(REQUEST_METHOD_GET,"",reqUrl);
 
-        jedis.setex(ACCESS_TOKEN,new Integer(json.getString("expires_in")),json.getString("access_token"));
+        jedis.setex(ACCESS_TOKEN,new Integer(jsonObject.getString("expires_in")),jsonObject.getString("access_token"));
         accessToken = jedis.get(ACCESS_TOKEN);
         //释放资源
         RedisUtils.returnResource(jedis);
@@ -79,9 +71,9 @@ public class WeiXinServiceImpl implements WeiXinService {
     public String getServiceIp() {
         String token = getAccessTken();
         String url = Constant.WEIXIN_GETCSERVICEIP_URL;
-        String urlReq = String.format(url,token);
-        JSONObject obj = sendGet(urlReq);
-        String ip_list = obj.getString("ip_list");
+        String reqUrl = String.format(url,token);
+        JSONObject jsonObject = HttpUtils.httpsRequest(REQUEST_METHOD_GET,"",reqUrl);
+        String ip_list = jsonObject.getString("ip_list");
       //  String[] ipArr = ip_list.split(",");
         System.out.println(ip_list);
         return ip_list;
@@ -94,11 +86,11 @@ public class WeiXinServiceImpl implements WeiXinService {
     public boolean createMenu(Menu menu) {
         String token = getAccessTken();
         String url = Constant.WEIXIN_CREATEMENU_URL;
-        String urlReq = String.format(url,token);
+        String reqUrl = String.format(url,token);
         JSONObject outObj = JSONObject.fromObject(menu);
         String outputStr = outObj.toString();
-        JSONObject obj = httpRequest(urlReq,"POST",outputStr);
-        if("0".equals(obj.getString("errcode"))){
+        JSONObject jsonObject = HttpUtils.httpsRequest(REQUEST_METHOD_POST,outputStr,reqUrl);
+        if("0".equals(jsonObject.getString("errcode"))){
             return true;
         }
         return false;
@@ -133,109 +125,66 @@ public class WeiXinServiceImpl implements WeiXinService {
         return respMessage;
     }
 
-
-    private static JSONObject sendGet(String url){
-        log.info("request weChat url:{}",url);
-        try {
-            URL urlGet = new URL(url);
-            HttpURLConnection http = (HttpURLConnection) urlGet.openConnection();
-            http.setRequestMethod("GET"); // get请求方式
-            http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            http.setDoOutput(true);
-            http.setDoInput(true);
-            System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);// 连接超时30秒
-            System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT); // 读取超时30秒
-            http.connect();
-
-            if(200==http.getResponseCode()){
-                InputStream is = http.getInputStream();
-                int size = is.available();
-                log.info("is size:",size);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] bytes = new byte[1024];
-                int len = 0;
-                while((len = is.read(bytes))!=-1){
-                    baos.write(bytes,0,len);
-                    baos.flush();
-                }
-                String rspStr = baos.toString(ENCODING);
-                log.info("weChat response：{}",rspStr);
-                JSONObject obj = JSONObject.fromObject(rspStr);
-                is.close();
-                return obj;
-            }
-        }catch (Exception ex){
-            log.warn("weixinRequest fail,{}",ex);
-            return null;
-        }
-        return null;
+    /**新增临时媒体素材*/
+    @Override
+    public JSONObject uploadMedia(String filePath,String mediaType) {
+        String accessToken = getAccessTken();
+        String url = Constant.WEIXIN_MEDIA_UPLOAD_URL;
+        url = String.format(url,accessToken,mediaType);
+        JSONObject jsonObject = HttpUtils.uploadFile(url,filePath);
+        return jsonObject;
     }
 
+    /**
+     * 下载微信媒体素材（不包含视频）
+     */
+    @Override
+    public String downloadMedia(String mediaId, String fileSavePath) {
+        log.info("downloadVideo param:[mediaId:{},fileSavePath:{}]",mediaId,fileSavePath);
+        //非空判断
+        if(StringUtils.isEmpty(mediaId)){
+            log.warn("downloadVideo fail:mediaId is empty");return null;
+        }
+        if(StringUtils.isEmpty(fileSavePath)){
+            log.warn("downloadVideo fail:fileSavePath is empty");return null;
+        }
+
+        //媒体素材
+        String accessToken = getAccessTken();
+        String requestUrl = String.format(Constant.WEIXIN_MEDIA_GET_URL,accessToken,mediaId);
+        log.info("requestUrl:{}",requestUrl);
+        //下载视频
+        String savePath = HttpUtils.downloadFile(requestUrl,fileSavePath);
+
+        log.info("downloadVideo return:[savePath:{}]",savePath);
+        return savePath;
+    }
 
     /**
-     * 描述:  发起https请求并获取结果
-     * @param requestUrl 请求地址
-     * @param requestMethod 请求方式（GET、POST）
-     * @param outputStr 提交的数据
-     * @return JSONObject(通过JSONObject.get(key)的方式获取json对象的属性值)
+     * 下载微信媒体素材（视频）
      */
-    public static JSONObject httpRequest(String requestUrl, String requestMethod, String outputStr) {
-        log.info("requestUrl value:{}",requestUrl);
-        log.info("outputStr value:{}",outputStr);
-        JSONObject jsonObject = null;
-        StringBuffer buffer = new StringBuffer();
-        try {
-            // 创建SSLContext对象，并使用我们指定的信任管理器初始化
-            TrustManager[] tm = { new MyX509TrustManager() };
-            SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
-            sslContext.init(null, tm, new java.security.SecureRandom());
-            // 从上述SSLContext对象中得到SSLSocketFactory对象
-            SSLSocketFactory ssf = sslContext.getSocketFactory();
-
-            URL url = new URL(requestUrl);
-            HttpsURLConnection httpUrlConn = (HttpsURLConnection) url.openConnection();
-            httpUrlConn.setSSLSocketFactory(ssf);
-
-            httpUrlConn.setDoOutput(true);
-            httpUrlConn.setDoInput(true);
-            httpUrlConn.setUseCaches(false);
-
-            // 设置请求方式（GET/POST）
-            httpUrlConn.setRequestMethod(requestMethod);
-
-            if ("GET".equalsIgnoreCase(requestMethod))
-                httpUrlConn.connect();
-
-            // 当有数据需要提交时
-            if (null != outputStr) {
-                OutputStream outputStream = httpUrlConn.getOutputStream();
-                // 注意编码格式，防止中文乱码
-                outputStream.write(outputStr.getBytes("UTF-8"));
-                outputStream.close();
-            }
-
-            // 将返回的输入流转换成字符串
-            InputStream inputStream = httpUrlConn.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "utf-8");
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-            String str = null;
-            while ((str = bufferedReader.readLine()) != null) {
-                buffer.append(str);
-            }
-            bufferedReader.close();
-            inputStreamReader.close();
-            // 释放资源
-            inputStream.close();
-            inputStream = null;
-            httpUrlConn.disconnect();
-            jsonObject = JSONObject.fromObject(buffer.toString());
-            log.info("jsonObject:{}",jsonObject);
-        } catch (ConnectException ce) {
-            log.error("Weixin server connection timed out.");
-        } catch (Exception e) {
-            log.error("https request error:{}", e);
+    @Override
+    public String downloadVideo(String mediaId, String fileSavePath) {
+        log.info("downloadVideo param:[mediaId:{},fileSavePath:{}]",mediaId,fileSavePath);
+        //非空判断
+        if(StringUtils.isEmpty(mediaId)){
+            log.warn("downloadVideo fail:mediaId is empty");return null;
         }
-        return jsonObject;
+        if(StringUtils.isEmpty(fileSavePath)){
+            log.warn("downloadVideo fail:fileSavePath is empty");return null;
+        }
+
+        //获取视频地址
+        String accessToken = getAccessTken();
+        String requestUrl = String.format(Constant.WEIXIN_MEDIA_GET_VIDEO_URL,accessToken,mediaId);
+        JSONObject jsonObject = HttpUtils.httpRequest(REQUEST_METHOD_GET,requestUrl);
+        String video_url = jsonObject.getString("video_url");
+        log.info("video_url:{}",video_url);
+
+        //下载视频
+        String savePath = HttpUtils.downloadFile(video_url,fileSavePath);
+
+        log.info("downloadVideo return:[savePath:{}]",savePath);
+        return savePath;
     }
 }

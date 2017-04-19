@@ -21,14 +21,12 @@ public class Constant {
     public static final String WEIXIN_GETCSERVICEIP_URL="https://api.weixin.qq.com/cgi-bin/getcallbackip?access_token=%1s";
     /**创建菜单*/
     public static final String WEIXIN_CREATEMENU_URL="https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%1s";
-
-
-
-
-    /**上传多媒体文件的地址*/
-    public static final String WEIXIN_POST_FILE_URL="https://api.weixin.qq.com/cgi-bin/media/upload";
-    /**获取多媒体文件的地址*/
-    public static final String WEIXIN_GET_FILE_URL="http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID";
+    /**新增临时素材*/
+    public static final String WEIXIN_MEDIA_UPLOAD_URL="https://api.weixin.qq.com/cgi-bin/media/upload?access_token=%1s&type=%2s";
+    /**获取临时素材*/
+    public static final String WEIXIN_MEDIA_GET_URL="https://api.weixin.qq.com/cgi-bin/media/get?access_token=%1s&media_id=%2s";
+    /**获取临时素材-视频*/
+    public static final String WEIXIN_MEDIA_GET_VIDEO_URL="http://api.weixin.qq.com/cgi-bin/media/get?access_token=%1s&media_id=%2s";
 
 
     /**
