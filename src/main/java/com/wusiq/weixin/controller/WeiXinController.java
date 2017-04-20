@@ -125,8 +125,8 @@ public class WeiXinController {
         String rspStr = "aaaa";
         String filePath = "H:"+ File.separator+"test"+File.separator+"Files";
       // String mediaId = "4aTHSQywlN2NfmhCDkq93R4HJaBOoTQObis3H308PdqFbdQ2raXt78r7uOCWK-LU";
-        //String mediaId = "kyMUfUSVWeeqiAVFBS6tqN6Bft7P4io4V2cFW0RReO6imrrmoZS9IBWfjy1X0NWP";//scream01.JPG
-        String mediaId = "BZbBW-v_-uPObjr0kah2AnNiEQ6a-oKy_cGdrOkKZdTjcS__nqfQsSQ03j8SSIdR";//cup.mp4
+        String mediaId = "kyMUfUSVWeeqiAVFBS6tqN6Bft7P4io4V2cFW0RReO6imrrmoZS9IBWfjy1X0NWP";//scream01.JPG
+       // String mediaId = "BZbBW-v_-uPObjr0kah2AnNiEQ6a-oKy_cGdrOkKZdTjcS__nqfQsSQ03j8SSIdR";//cup.mp4
 
         rspStr = WeiXinServiceImpl.downloadMedia(mediaId,filePath);
         log.info("rspStr:{}",rspStr);

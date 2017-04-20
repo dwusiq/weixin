@@ -52,31 +52,10 @@ public class HttpUtils {
         HttpURLConnection conn = null;
         // 设置边界
         String BOUNDARY = "----------" + System.currentTimeMillis();
-        try {
-            URLConnection urlConnection =  HttpUtils.getUrlConnection(url);
-            URL urlObj = new URL(url);
-            conn = (HttpURLConnection) urlObj.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setUseCaches(false);
-            conn.setRequestProperty("Connection", "Keep-Alive");
-            conn.setRequestProperty("Charset",ENCODING);
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+ BOUNDARY);
-            System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);
-            System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT);
-
-   /*         int responseCode = conn.getResponseCode();
-            if(200!=responseCode){
-                log.warn("uploadFile fail,responseCode:{}",responseCode);
-            }*/
-
-        } catch (MalformedURLException e) {
-            log.warn("uploadFile fail",e);
-            return null;
-        } catch (IOException e) {
-            log.warn("uploadFile fail",e);
-            return null;
-        }
+        conn = (HttpURLConnection)HttpUtils.getUrlConnection(url);
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("Charset",ENCODING);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+ BOUNDARY);
 
         // 请求正文信息
         // 第一部分：
@@ -164,22 +143,23 @@ public class HttpUtils {
             fileSavePath += File.separator;
         }
         try{
-            URL url = new URL(requestUrl);
-            conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection)HttpUtils.getUrlConnection(requestUrl);
             conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);
-            System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT);
 
             int responseCode = conn.getResponseCode();
             if(200!=responseCode){
                 log.warn("downloadFile fail,responseCode:{}",responseCode);
+                return null;
             }
 
             inputStream = conn.getInputStream();
             String ContentDisposition = conn.getHeaderField("Content-disposition");
             log.info("ContentDisposition:{}",ContentDisposition);
+            if(StringUtils.isEmpty(ContentDisposition)){
+                log.warn("ContentDisposition is empty");
+                return null;
+            }
+            ContentDisposition = ContentDisposition.replace("\"","");
             String FileName = ContentDisposition.substring(ContentDisposition.indexOf("filename=")+"filename=".length(), ContentDisposition.length());
             fileSavePath += FileName;
             log.info("meida fileSavePath:{}",fileSavePath);
@@ -241,15 +221,9 @@ public class HttpUtils {
             // 从上述SSLContext对象中得到SSLSocketFactory对象
             SSLSocketFactory ssf = sslContext.getSocketFactory();
 
-            URL url = new URL(requestUrl);
-            httpsConn = (HttpsURLConnection) url.openConnection();//https传输协议
+            httpsConn = (HttpsURLConnection)HttpUtils.getUrlConnection(requestUrl);//https传输协议
             httpsConn.setSSLSocketFactory(ssf);
-            httpsConn.setDoOutput(true);
-            httpsConn.setDoInput(true);
-            httpsConn.setUseCaches(false);//设置不缓存
             httpsConn.setRequestMethod(requestMethod);// 设置请求方式（GET/POST）
-            System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);
-            System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT);
 
             if ("GET".equalsIgnoreCase(requestMethod)){
                 httpsConn.connect();
@@ -333,14 +307,8 @@ public class HttpUtils {
         }
 
         try {
-            URL url = new URL(requestUrl);
-            httpConn = (HttpURLConnection) url.openConnection(); // http协议传输
-            httpConn.setDoOutput(true);
-            httpConn.setDoInput(true);
-            httpConn.setUseCaches(false);//设置不缓存
+            httpConn = (HttpURLConnection)HttpUtils.getUrlConnection(requestUrl);//http传输协议
             httpConn.setRequestMethod(requestMethod);// 设置请求方式（GET/POST）
-            System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);
-            System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT);
 
             if ("GET".equalsIgnoreCase(requestMethod)){
                 httpConn.connect();
@@ -396,7 +364,7 @@ public class HttpUtils {
         URLConnection  conn = null;
         try {
             URL url = new URL(requestUrl);
-            url.openConnection();
+            conn = url.openConnection();
             conn.setDoOutput(true);
             conn.setDoInput(true);
             conn.setUseCaches(false);//设置不缓存
