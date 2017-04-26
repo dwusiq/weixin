@@ -1,6 +1,9 @@
 package test;
 
+import com.wusiq.weixin.dto.msg.BaseDto;
 import com.wusiq.weixin.utils.RedisUtils;
+import net.sf.json.JSONObject;
+import net.sf.json.util.JSONUtils;
 import redis.clients.jedis.Jedis;
 
 import java.io.*;
@@ -10,8 +13,16 @@ import java.io.*;
  */
 public class Test {
     public static void main(String args[]){
-       String ContentDisposition="attachment; filename=1007_d008f0e21c304c1a9042d440d02bdcf3.f10.mp4";
-       String FileName = ContentDisposition.substring(ContentDisposition.indexOf("filename=")+"filename=".length(), ContentDisposition.length());
-       System.out.println(FileName);
+        BaseDto bd = new BaseDto();
+        bd.setMsgType("1");
+        bd.setCreateTime("adfasd");
+        bd.setFromUserName("ff");
+
+        JSONObject jsonObj = JSONObject.fromObject(bd);
+
+        BaseDto obj = (BaseDto)JSONObject.toBean(jsonObj,BaseDto.class);
+
+        System.out.println(obj.getCreateTime());
+
     }
 }

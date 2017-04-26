@@ -8,8 +8,12 @@ function doLogin() {
         url: 'login/doLogin.do',
         data: {"username": username, "userpwd": userpwd},
         success: function (data) {
-            var json = JSON.stringify(data);
-            alert(json);
+            var obj = JSON.stringify(data);
+             if(data.result=="1"){
+                 window.location.href="http://dwusiq.tunnel.qydev.com/weixin/secondPage.jsp";
+             }else {
+                 alert("fail")
+             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             alert("errot");

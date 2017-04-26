@@ -1,7 +1,7 @@
 package com.wusiq.weixin.dto.req;
 
 /**
- * Created by wicker on 2017/3/31.
+ * 登陆-页面请求入参实体类
  */
 public class ReqLoginDto {
     private String username;
