@@ -3,6 +3,10 @@ package com.wusiq.weixin.controller;
 import com.wusiq.weixin.dto.req.*;
 import com.wusiq.weixin.dto.rsp.RspDto;
 import com.wusiq.weixin.dto.rsp.RspLoginDto;
+import com.wusiq.weixin.dto.rsp.RspTempQrcodeDto;
+import com.wusiq.weixin.dto.wacat.req.ActionInfoDto;
+import com.wusiq.weixin.dto.wacat.req.ReqTempQrcodeDto;
+import com.wusiq.weixin.dto.wacat.req.SceneDto;
 import com.wusiq.weixin.service.WeiXinService;
 import com.wusiq.weixin.utils.StringTools;
 import net.sf.json.JSONObject;
@@ -160,6 +164,41 @@ public class WeiXinController {
         String res = object.toString();
         log.info("rsp:{}",res);
         return rspStr;
+    }
+
+    /***
+     * 创建临时二维码ticket
+     */
+    @ResponseBody
+    @RequestMapping(value="createTempQrcodeTicket.json",method = RequestMethod.POST)
+    public String createTempQrcodeTicket(){
+        log.info("创建临时二维码ticket.开始");
+
+        SceneDto sd = new SceneDto();
+        sd.setScene_id(122);
+
+        ActionInfoDto aid = new ActionInfoDto();
+        aid.setScene(sd);
+
+        ReqTempQrcodeDto rtqd = new ReqTempQrcodeDto();
+        rtqd.setExpire_seconds(3600);
+        rtqd.setAction_name("QR_SCENE");
+        rtqd.setAction_info(aid);
+
+        JSONObject jsonObject = WeiXinServiceImpl.createTempQrcodeTicket(rtqd);
+        String res = null;
+        if(jsonObject != null){
+            RspTempQrcodeDto rtd = new RspTempQrcodeDto();
+            rtd.setExpire_seconds(jsonObject.getInt("expire_seconds"));
+            rtd.setTicket(jsonObject.getString("ticket"));
+            rtd.setUrl(jsonObject.getString("url"));
+
+            res = JSONObject.fromObject(rtd).toString();
+        }
+
+
+        log.info("创建临时二维码ticket.结束,返回参：{}",res);
+        return res;
     }
 
 

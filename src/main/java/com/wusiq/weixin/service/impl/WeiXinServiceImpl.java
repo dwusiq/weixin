@@ -2,6 +2,7 @@ package com.wusiq.weixin.service.impl;
 
 import com.wusiq.weixin.base.Constant;
 import com.wusiq.weixin.dto.req.Menu;
+import com.wusiq.weixin.dto.wacat.req.ReqTempQrcodeDto;
 import com.wusiq.weixin.service.EventService;
 import com.wusiq.weixin.service.MessageService;
 import com.wusiq.weixin.service.WeiXinService;
@@ -177,7 +178,7 @@ public class WeiXinServiceImpl implements WeiXinService {
         //获取视频地址
         String accessToken = getAccessTken();
         String requestUrl = String.format(Constant.WEIXIN_MEDIA_GET_VIDEO_URL,accessToken,mediaId);
-        JSONObject jsonObject = HttpUtils.httpRequest(REQUEST_METHOD_GET,requestUrl);
+        JSONObject jsonObject = HttpUtils.httpRequest(REQUEST_METHOD_GET,null,requestUrl);
         String video_url = jsonObject.getString("video_url");
         log.info("video_url:{}",video_url);
 
@@ -186,5 +187,21 @@ public class WeiXinServiceImpl implements WeiXinService {
 
         log.info("downloadVideo return:[savePath:{}]",savePath);
         return savePath;
+    }
+
+    /**
+     * 创建临时二维码ticket
+     */
+    @Override
+    public JSONObject createTempQrcodeTicket(ReqTempQrcodeDto reqTempQrcodeDto) {
+        JSONObject outputJsonObj = JSONObject.fromObject(reqTempQrcodeDto);
+        log.info("service创建临时二维码ticket.开始.入参：{}",JSONObject.fromObject(outputJsonObj));
+        //获取视频地址
+        String accessToken = getAccessTken();
+        String requestUrl = String.format(Constant.WEIXIN_CREATE_TEMP_QRCODE_TICKET_URL,accessToken);
+        JSONObject jsonObject = HttpUtils.httpRequest(REQUEST_METHOD_GET,outputJsonObj.toString(),requestUrl);
+
+        log.info("service创建临时二维码ticket.结束.出参：{}",jsonObject);
+        return jsonObject;
     }
 }

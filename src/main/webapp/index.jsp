@@ -14,6 +14,13 @@
     <script type="text/javascript" src="js/index.js"></script>
   </head>
   <body>
+  <table>
+    <tr>
+      <td><a href="createTempQrcodeTicket.jsp"> 生成二维码ticket</a></td>
+    </tr>
+
+  </table>
+  <br/>
      <form>
        <table>
          <tr>

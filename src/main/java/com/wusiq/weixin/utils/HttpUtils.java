@@ -199,18 +199,15 @@ public class HttpUtils {
      * @return
      */
     public static JSONObject httpsRequest(String requestMethod, String outputStr,String requestUrl) {
-        log.info("httpsRequest param:[requestMethod:{},outputStr:{},requestUrl:{}]",requestMethod,outputStr,requestUrl);
-        InputStream inputStream = null;
+        log.info("发起https请求并获取结果.开始.入参:[requestMethod:{},outputStr:{},requestUrl:{}]",requestMethod,outputStr,requestUrl);
         HttpsURLConnection httpsConn = null;
-        BufferedReader bufferedReader = null;
-        InputStreamReader inputStreamReader = null;
 
         //非空判断
         if(StringUtils.isEmpty(requestMethod)){
-            log.warn("httpsRequest fail:requestMethod is empty");return null;
+            log.warn("发起https请求并获取结果.异常:requestMethod is empty");return null;
         }
         if(StringUtils.isEmpty(requestUrl)){
-            log.warn("httpsRequest fail:requestUrl is empty");return null;
+            log.warn("发起https请求并获取结果.异常:requestUrl is empty");return null;
         }
 
         try{
@@ -228,32 +225,13 @@ public class HttpUtils {
             if ("GET".equalsIgnoreCase(requestMethod)){
                 httpsConn.connect();
             }
-            // 当有数据需要提交时
-            if (StringUtils.isNotEmpty(outputStr)) {
-                OutputStream outputStream = httpsConn.getOutputStream();
-                // 注意编码格式，防止中文乱码
-                outputStream.write(outputStr.getBytes(ENCODING));
-                outputStream.close();
-            }
 
             int responseCode = httpsConn.getResponseCode();
             if(200!=responseCode){
-                log.warn("httpsRequest fail,responseCode:{}",responseCode);
+                log.warn("发起https请求并获取结果.异常,responseCode:{}",responseCode);
             }
 
-            // 将返回的输入流转换成字符串
-            inputStream = httpsConn.getInputStream();
-            inputStreamReader = new InputStreamReader(inputStream, ENCODING);
-            bufferedReader = new BufferedReader(inputStreamReader);
-            String str = null;
-            StringBuffer buffer  = new StringBuffer();
-            while ((str = bufferedReader.readLine()) != null) {
-                buffer.append(str);
-            }
-
-            JSONObject jsonObject = JSONObject.fromObject(buffer.toString());
-            log.info("httpsRequest result:{}",jsonObject);
-            return jsonObject;
+            return urlConnectionHandle(httpsConn,outputStr);
         } catch (IOException e) {
             log.warn("httpsRequest",e);
         } catch (NoSuchAlgorithmException e) {
@@ -264,21 +242,8 @@ public class HttpUtils {
             log.warn("httpsRequest",e);
         }finally {
             // 释放资源
-            try {
-                if(bufferedReader != null){
-                    bufferedReader.close();
-                }
-                if(httpsConn != null){
-                    httpsConn.disconnect();
-                }
-                if(inputStreamReader != null){
-                    inputStreamReader.close();
-                }
-                if(inputStream != null){
-                    inputStream.close();
-                }
-            } catch (IOException e) {
-                log.warn("resourceClose fail",e);
+            if(httpsConn != null){
+                httpsConn.disconnect();
             }
         }
         return null;
@@ -290,68 +255,28 @@ public class HttpUtils {
      * @param requestUrl  请求地址
      * @return
      */
-    public static JSONObject httpRequest(String requestMethod, String requestUrl) {
-        log.info("httpRequest param:[requestMethod:{},requestUrl:{}]",requestMethod,requestUrl);
-
-        InputStream inputStream = null;
+    public static JSONObject httpRequest(String requestMethod, String outputStr, String requestUrl) {
+        log.info("发起http请求并获取结果.开始.入参:[requestMethod:{},outputStr:{},requestUrl:{}]",requestMethod,outputStr,requestUrl);
         HttpURLConnection httpConn = null;
-        BufferedReader bufferedReader = null;
-        InputStreamReader inputStreamReader = null;
 
         //非空判断
         if(StringUtils.isEmpty(requestMethod)){
-            log.warn("httpRequest fail:requestMethod is empty");return null;
+            log.warn("发起http请求并获取结果.异常:requestMethod is empty");return null;
         }
         if(StringUtils.isEmpty(requestUrl)){
-            log.warn("httpRequest fail:requestUrl is empty");return null;
+            log.warn("发起http请求并获取结果.异常:requestUrl is empty");return null;
         }
 
         try {
             httpConn = (HttpURLConnection)HttpUtils.getUrlConnection(requestUrl);//http传输协议
             httpConn.setRequestMethod(requestMethod);// 设置请求方式（GET/POST）
-
-            if ("GET".equalsIgnoreCase(requestMethod)){
-                httpConn.connect();
-            }
-
-            int responseCode = httpConn.getResponseCode();
-            if(200!=responseCode){
-                log.warn("httpRequest fail,responseCode:{}",responseCode);
-            }
-
-            // 将返回的输入流转换成字符串
-            inputStream = httpConn.getInputStream();
-            inputStreamReader = new InputStreamReader(inputStream, ENCODING);
-            bufferedReader = new BufferedReader(inputStreamReader);
-
-            String str = null;
-            StringBuffer buffer  = new StringBuffer();
-            while ((str = bufferedReader.readLine()) != null) {
-                buffer.append(str);
-            }
-
-            JSONObject jsonObject = JSONObject.fromObject(buffer.toString());
-            log.info("httpRequest result:{}",jsonObject);
-            return jsonObject;
+            return urlConnectionHandle(httpConn,outputStr);
         } catch (IOException e) {
             e.printStackTrace();
         }finally{
             // 释放资源
-            try {
-                if(bufferedReader != null){
-                    bufferedReader.close();
-                }
-                if(inputStreamReader != null){
-                    inputStreamReader.close();
-                }
-                if(inputStream != null){
-                    inputStream.close();
-                }
-                if(httpConn != null){
-                    httpConn.disconnect();
-                }
-            } catch (IOException e) {
-                log.warn("resourceClose fail",e);
+            if(httpConn != null){
+                httpConn.disconnect();
             }
         }
         return null;
@@ -371,10 +296,64 @@ public class HttpUtils {
             System.setProperty("sun.net.client.defaultConnectTimeout", TIME_OUT);
             System.setProperty("sun.net.client.defaultReadTimeout", TIME_OUT);
         } catch (MalformedURLException e) {
-            log.warn("getUrlConnection fail",e);
+            log.warn("获取URL连接实例 异常",e);
         } catch (IOException e) {
-            log.warn("getUrlConnection fail",e);
+            log.warn("获取URL连接实例 异常",e);
         }
         return conn;
     }
+
+    /***
+     * url连接处理(发送参数和接收返回值)
+     */
+    private static JSONObject urlConnectionHandle(URLConnection urlConnection,String outputStr) {
+        JSONObject jsonObject =null;
+        InputStream inputStream = null;
+        BufferedReader bufferedReader = null;
+        InputStreamReader inputStreamReader = null;
+
+        try{
+            // 当有数据需要提交时
+            if (StringUtils.isNotEmpty(outputStr)) {
+                OutputStream outputStream = urlConnection.getOutputStream();
+                // 注意编码格式，防止中文乱码
+                outputStream.write(outputStr.getBytes(ENCODING));
+                outputStream.close();
+            }
+
+            // 将返回的输入流转换成字符串
+            inputStream = urlConnection.getInputStream();
+            inputStreamReader = new InputStreamReader(inputStream, ENCODING);
+            bufferedReader = new BufferedReader(inputStreamReader);
+            String str = null;
+            StringBuffer buffer  = new StringBuffer();
+            while ((str = bufferedReader.readLine()) != null) {
+                buffer.append(str);
+            }
+
+            String urlBakStr = buffer.toString();
+            log.info("url连接处理(发送参数和接收返回值)，得到的返回参:{}",urlBakStr);
+            jsonObject = JSONObject.fromObject(urlBakStr);
+        } catch (IOException e) {
+            log.warn("url连接处理(发送参数和接收返回值).异常",e);
+        }finally {
+            // 释放资源
+            try {
+                if(bufferedReader != null){
+                    bufferedReader.close();
+                }
+                if(inputStreamReader != null){
+                    inputStreamReader.close();
+                }
+                if(inputStream != null){
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                log.warn("发送url请求.异常",e);
+            }
+        }
+        return jsonObject;
+    }
+
+
 }

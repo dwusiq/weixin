@@ -27,6 +27,10 @@ public class Constant {
     public static final String WEIXIN_MEDIA_GET_URL="https://api.weixin.qq.com/cgi-bin/media/get?access_token=%1s&media_id=%2s";
     /**获取临时素材-视频*/
     public static final String WEIXIN_MEDIA_GET_VIDEO_URL="http://api.weixin.qq.com/cgi-bin/media/get?access_token=%1s&media_id=%2s";
+    /**创建临时二维码ticket*/
+    public static final String WEIXIN_CREATE_TEMP_QRCODE_TICKET_URL="https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=%1s";
+
+
 
 
     /**

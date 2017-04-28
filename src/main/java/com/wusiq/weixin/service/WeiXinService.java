@@ -1,6 +1,7 @@
 package com.wusiq.weixin.service;
 
 import com.wusiq.weixin.dto.req.Menu;
+import com.wusiq.weixin.dto.wacat.req.ReqTempQrcodeDto;
 import net.sf.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,4 +25,6 @@ public interface WeiXinService {
     /**获取视频素材*/
     String downloadVideo(String mediaId,String fileSavePath);
 
+    /**创建临时二维码ticket*/
+    JSONObject createTempQrcodeTicket(ReqTempQrcodeDto reqTempQrcodeDto);
 }
